@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · MeterFlow{% endblock %}
+{% block heading %}Meter inventory{% endblock %}
+{% block content %}
+<section class="welcome"><div><span class="eyebrow light">INVENTORY OVERVIEW</span><h2>Every meter. One reliable record.</h2><p>Create, find, and print unique barcode labels for your meter inventory.</p></div><div class="welcome-icon">▥</div></section>
+<div class="stats"><article class="stat-card"><span class="stat-icon">▦</span><span class="stat-label">Total registered meters</span><strong>{{ total }}</strong><small>Records saved in this system</small></article><article class="stat-card"><span class="stat-icon green">✓</span><span class="stat-label">Barcode-ready records</span><strong>{{ total }}</strong><small>Each record has a unique ID</small></article></div>
+<section class="panel">
+  <div class="panel-head"><div><h3>Meter records</h3><p>Search by serial number, barcode ID, model, or manufacturer.</p></div><a class="btn primary" href="{% url 'create_meter' %}">＋ Add meter</a></div>
+  <form class="searchbar" method="get"><input name="q" value="{{ query }}" placeholder="Search meter records…"><button class="btn secondary">Search</button>{% if query %}<a class="clear" href="{% url 'dashboard' %}">Clear</a>{% endif %}</form>
+  <div class="table-wrap"><table><thead><tr><th>Meter serial number</th><th>Barcode ID</th><th>Size</th><th>Type</th><th>Manufacturer</th><th>Actions</th></tr></thead><tbody>
+  {% for meter in page %}<tr><td><strong>{{ meter.serial_number }}</strong><small class="subtext">{{ meter.model_number }}</small></td><td><span class="code-pill">{{ meter.barcode_id }}</span></td><td>{{ meter.size }}</td><td>{{ meter.meter_type }}</td><td>{{ meter.manufacturer_name }}</td><td><a class="table-link" href="{% url 'meter_detail' meter.pk %}">View →</a></td></tr>
+  {% empty %}<tr><td colspan="6" class="empty"><div class="empty-icon">▤</div><strong>No meter records found</strong><p>Add a meter manually or import a CSV file.</p><a class="btn primary" href="{% url 'create_meter' %}">Add first meter</a></td></tr>{% endfor %}
+  </tbody></table></div>
+  {% if page.has_other_pages %}<div class="pagination">{% if page.has_previous %}<a href="?q={{ query|urlencode }}&page={{ page.previous_page_number }}">← Previous</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?q={{ query|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</div>{% endif %}
+</section>
+{% endblock %}

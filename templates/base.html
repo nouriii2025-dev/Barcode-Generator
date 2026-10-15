@@ -1,0 +1,21 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Meter Barcode Manager{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'meters/app.css' %}">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><span class="brand-mark">M</span><div><strong>MeterFlow</strong><small>Barcode management</small></div></div>
+  <nav><a href="{% url 'dashboard' %}">▦ &nbsp; Dashboard</a><a href="{% url 'create_meter' %}">＋ &nbsp; Add meter</a><a href="{% url 'scan_meter' %}">⌗ &nbsp; Scan barcode</a><a href="{% url 'import_csv' %}">⇧ &nbsp; Import records</a></nav>
+  <div class="side-note"><span class="status-dot"></span> Local database active</div>
+</aside>
+<main class="main">
+  <header class="topbar"><div><span class="eyebrow">METER OPERATIONS</span><h1>{% block heading %}Barcode manager{% endblock %}</h1></div><div class="top-actions"><span class="avatar">MM</span></div></header>
+  {% if messages %}<div class="messages">{% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+  {% block content %}{% endblock %}
+  <footer>MeterFlow · Internal meter identification system</footer>
+</main>
+</body></html>

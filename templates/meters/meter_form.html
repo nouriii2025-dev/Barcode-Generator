@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Add meter · MeterFlow{% endblock %}{% block heading %}Register a meter{% endblock %}
+{% block content %}
+<div class="page-intro"><a class="back" href="{% url 'dashboard' %}">← Back to inventory</a><p>Enter the meter details below. A unique Code 128 barcode will be created automatically when you save.</p></div>
+<form method="post" class="panel form-panel" id="meter-form">{% csrf_token %}
+{% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+<div class="form-section"><div class="section-number">01</div><div class="section-content"><h3>Identification</h3><p>Core information printed or encoded for tracking.</p><div class="field-grid">
+{% for field in form %}{% if field.name == "serial_number" or field.name == "size" or field.name == "meter_type" or field.name == "model_number" or field.name == "manufacturer_name" or field.name == "country_of_manufacture" %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }} <span>*</span></label>{{ field }}{% if field.errors %}<small class="error">{{ field.errors|striptags }}</small>{% endif %}</div>{% endif %}{% endfor %}
+</div></div></div>
+<div class="form-section"><div class="section-number">02</div><div class="section-content"><h3>Register configuration</h3><p>Digit counts, multiplier, measurement unit, and reading limit.</p><div class="field-grid">
+{% for field in form %}{% if field.name == "number_of_digits" or field.name == "pre_decimal_digits" or field.name == "decimal_digits" or field.name == "multiplication_factor" or field.name == "unit_of_measurement" or field.name == "maximum_reading" %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }} <span>*</span></label>{{ field }}{% if field.errors %}<small class="error">{{ field.errors|striptags }}</small>{% endif %}</div>{% endif %}{% endfor %}
+</div></div></div>
+<div class="form-section"><div class="section-number">03</div><div class="section-content"><h3>Manufacturing & contract</h3><p>Traceability details and storage requirements.</p><div class="field-grid">
+{% for field in form %}{% if field.name == "date_of_manufacture" or field.name == "contract_reference" or field.name == "storage_conditions" %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }} <span>*</span></label>{{ field }}{% if field.errors %}<small class="error">{{ field.errors|striptags }}</small>{% endif %}</div>{% endif %}{% endfor %}
+</div></div></div>
+<div class="form-actions"><a class="btn secondary" href="{% url 'dashboard' %}">Cancel</a><button class="btn primary" type="submit">▦ Generate barcode & save</button></div>
+</form>
+{% endblock %}

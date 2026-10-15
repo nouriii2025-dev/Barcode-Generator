@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Scan barcode · MeterFlow{% endblock %}
+{% block heading %}Scan a meter barcode{% endblock %}
+{% block content %}
+<div class="page-intro"><a class="back" href="{% url 'dashboard' %}">← Back to inventory</a><p>Use a handheld scanner or your phone camera. The scan finds the saved meter record and opens its details.</p></div>
+<div class="scan-layout">
+  <section class="panel scan-panel">
+    <div class="scan-method-icon">⌗</div>
+    <h2>Handheld scanner</h2>
+    <p>Click the field, scan the Code 128 label, then press Enter if your scanner does not submit automatically.</p>
+    <form method="post" id="manual-scan-form">
+      {% csrf_token %}
+      <label class="scan-label" for="barcode-value">Barcode ID</label>
+      <div class="scan-input-row"><input id="barcode-value" name="barcode_value" value="{{ scanned_value }}" placeholder="Scan or type e.g. MTR8F2A91C47D63B10" autocomplete="off" autofocus required><button class="btn primary" type="submit">Find meter</button></div>
+    </form>
+    {% if scan_error %}<div class="scan-error" role="alert">{{ scan_error }}</div>{% endif %}
+  </section>
+  <section class="panel scan-panel">
+    <div class="scan-method-icon">▣</div>
+    <h2>Mobile phone camera</h2>
+    <p>Open this page on your phone over the company network and allow camera access. Point the camera at the barcode.</p>
+    <div class="camera-box"><video id="camera-preview" muted playsinline></video><div id="camera-placeholder">Camera preview will appear here</div></div>
+    <div class="camera-actions"><button type="button" class="btn primary" id="start-camera">Start camera scanner</button><button type="button" class="btn secondary" id="stop-camera" disabled>Stop camera</button></div>
+    <p class="camera-status" id="camera-status" aria-live="polite">Camera is stopped.</p>
+    <p class="camera-note">Phone-camera access generally requires HTTPS. On an office LAN, configure HTTPS for the Django site before using this feature. USB/Bluetooth scanners can work without camera permission.</p>
+  </section>
+</div>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
+<script>
+(() => {
+  const video = document.getElementById('camera-preview');
+  const placeholder = document.getElementById('camera-placeholder');
+  const status = document.getElementById('camera-status');
+  const start = document.getElementById('start-camera');
+  const stop = document.getElementById('stop-camera');
+  const input = document.getElementById('barcode-value');
+  const form = document.getElementById('manual-scan-form');
+  let reader = null;
+  let controls = null;
+
+  function stopScanner() {
+    if (controls) { controls.stop(); controls = null; }
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+    video.style.display = 'none';
+    placeholder.style.display = 'grid';
+    start.disabled = false;
+    stop.disabled = true;
+    status.textContent = 'Camera is stopped.';
+  }
+  stop.addEventListener('click', stopScanner);
+
+  start.addEventListener('click', async () => {
+    if (!window.isSecureContext) {
+      status.textContent = 'Camera access requires HTTPS on the office network. Ask IT to enable HTTPS, or use the handheld scanner.';
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.ZXingBrowser) {
+      status.textContent = 'Camera scanner is unavailable in this browser. Use a supported browser or the handheld scanner.';
+      return;
+    }
+    start.disabled = true;
+    status.textContent = 'Requesting camera permission…';
+    try {
+      reader = new ZXingBrowser.BrowserMultiFormatReader();
+      video.style.display = 'block';
+      placeholder.style.display = 'none';
+      controls = await reader.decodeFromVideoDevice(undefined, video, (result, error, control) => {
+        if (result) {
+          const value = result.getText().trim();
+          if (value) {
+            input.value = value;
+            status.textContent = 'Barcode detected. Looking up meter…';
+            control.stop();
+            controls = null;
+            form.requestSubmit();
+          }
+        }
+      });
+      stop.disabled = false;
+      status.textContent = 'Camera is active. Align the barcode inside the preview.';
+    } catch (e) {
+      stopScanner();
+      status.textContent = 'Could not start camera. Check browser permission and HTTPS, then try again.';
+    }
+  });
+  window.addEventListener('pagehide', stopScanner);
+})();
+</script>
+{% endblock %}

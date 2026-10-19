@@ -6,26 +6,26 @@
 <div class="scan-layout">
   <section class="panel scan-panel">
     <div class="scan-method-icon">⌗</div>
-    <h2>Handheld scanner</h2>
-    <p>Click the field, scan the Code 128 label, then press Enter if your scanner does not submit automatically.</p>
-    <form method="post" id="manual-scan-form">
+    <h2>Handheld barcode scanner</h2>
+    <p>Connect a USB or Bluetooth scanner, focus the field, and scan the Code 128 label. Scanners that send Enter submit automatically. You can also type the barcode ID.</p>
+    <form method="post" id="scan-form">
       {% csrf_token %}
       <label class="scan-label" for="barcode-value">Barcode ID</label>
-      <div class="scan-input-row"><input id="barcode-value" name="barcode_value" value="{{ scanned_value }}" placeholder="Scan or type e.g. MTR8F2A91C47D63B10" autocomplete="off" autofocus required><button class="btn primary" type="submit">Find meter</button></div>
+      <div class="scan-input-row"><input id="barcode-value" name="barcode_value" value="{{ scanned_value }}" placeholder="Scan or type e.g. MTR8A72F19C4D6E2A" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" autofocus required><button class="btn primary" id="submit-scan" type="submit">Find meter</button></div>
     </form>
     {% if scan_error %}<div class="scan-error" role="alert">{{ scan_error }}</div>{% endif %}
   </section>
   <section class="panel scan-panel">
     <div class="scan-method-icon">▣</div>
     <h2>Mobile phone camera</h2>
-    <p>Open this page on your phone over the company network and allow camera access. Point the camera at the barcode.</p>
+    <p>Start the camera, then hold a single Code 128 barcode steady inside the preview. Use good lighting, avoid glare, and keep the full barcode in view.</p>
     <div class="camera-box"><video id="camera-preview" muted playsinline></video><div id="camera-placeholder">Camera preview will appear here</div></div>
     <div class="camera-actions"><button type="button" class="btn primary" id="start-camera">Start camera scanner</button><button type="button" class="btn secondary" id="stop-camera" disabled>Stop camera</button></div>
-    <p class="camera-status" id="camera-status" aria-live="polite">Camera is stopped.</p>
-    <p class="camera-note">Phone-camera access generally requires HTTPS. On an office LAN, configure HTTPS for the Django site before using this feature. USB/Bluetooth scanners can work without camera permission.</p>
+    <p class="camera-status" id="camera-status" role="status" aria-live="polite">Camera is stopped. Camera permission is requested only after you select Start camera scanner.</p>
+    <p class="camera-note">Remote phone camera access requires HTTPS. An ordinary HTTP LAN IP address is not a secure context on most mobile browsers. Configure HTTPS on the site; localhost is trusted for local development. Do not change browser security settings.</p>
   </section>
 </div>
-<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
+<script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js" onerror="window.zxingLoadFailed = true;"></script>
 <script>
 (() => {
   const video = document.getElementById('camera-preview');
@@ -34,12 +34,23 @@
   const start = document.getElementById('start-camera');
   const stop = document.getElementById('stop-camera');
   const input = document.getElementById('barcode-value');
-  const form = document.getElementById('manual-scan-form');
-  let reader = null;
+  const form = document.getElementById('scan-form');
+  const submit = document.getElementById('submit-scan');
   let controls = null;
+  let scanGeneration = 0;
+  let submitting = false;
+  let scanHintTimer = null;
 
-  function stopScanner() {
-    if (controls) { controls.stop(); controls = null; }
+  function stopScanner(message) {
+    scanGeneration += 1;
+    if (scanHintTimer) {
+      window.clearTimeout(scanHintTimer);
+      scanHintTimer = null;
+    }
+    if (controls) {
+      controls.stop();
+      controls = null;
+    }
     if (video.srcObject) {
       video.srcObject.getTracks().forEach(track => track.stop());
       video.srcObject = null;
@@ -48,45 +59,94 @@
     placeholder.style.display = 'grid';
     start.disabled = false;
     stop.disabled = true;
-    status.textContent = 'Camera is stopped.';
+    status.textContent = message || 'Camera is stopped.';
   }
-  stop.addEventListener('click', stopScanner);
+
+  form.addEventListener('submit', event => {
+    const value = input.value.trim();
+    if (!value || submitting) {
+      event.preventDefault();
+      if (!value) {
+        status.textContent = 'Enter or scan a barcode ID before submitting.';
+        input.focus();
+      }
+      return;
+    }
+    input.value = value;
+    submitting = true;
+    submit.disabled = true;
+  });
+
+  stop.addEventListener('click', () => stopScanner('Camera stopped.'));
+
+  function cameraErrorMessage(error) {
+    if (error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')) {
+      return 'Camera permission was denied or blocked. Allow camera access for this site and try again; remote access requires HTTPS.';
+    }
+    if (error && (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError')) {
+      return 'No camera was found on this device.';
+    }
+    if (error && (error.name === 'NotReadableError' || error.name === 'TrackStartError')) {
+      return 'The camera could not start. It may be in use by another app; close that app and try again.';
+    }
+    return 'Could not start the camera. Check browser permission and camera availability, then try again.';
+  }
 
   start.addEventListener('click', async () => {
     if (!window.isSecureContext) {
-      status.textContent = 'Camera access requires HTTPS on the office network. Ask IT to enable HTTPS, or use the handheld scanner.';
+      status.textContent = 'Camera access is blocked because this page is not a secure context. Use HTTPS when accessing the site remotely, or use the handheld scanner.';
       return;
     }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.ZXingBrowser) {
-      status.textContent = 'Camera scanner is unavailable in this browser. Use a supported browser or the handheld scanner.';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = 'Camera access is not supported in this browser. Use a supported browser or the handheld scanner.';
       return;
     }
+    if (window.zxingLoadFailed || !window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatOneDReader) {
+      status.textContent = 'The barcode-scanning library could not be loaded. Check your internet connection or use the handheld scanner.';
+      return;
+    }
+
+    const generation = ++scanGeneration;
     start.disabled = true;
+    stop.disabled = false;
     status.textContent = 'Requesting camera permission…';
+    video.style.display = 'block';
+    placeholder.style.display = 'none';
     try {
-      reader = new ZXingBrowser.BrowserMultiFormatReader();
-      video.style.display = 'block';
-      placeholder.style.display = 'none';
-      controls = await reader.decodeFromVideoDevice(undefined, video, (result, error, control) => {
-        if (result) {
+      const reader = new ZXingBrowser.BrowserMultiFormatOneDReader();
+      const cameraControls = await reader.decodeFromConstraints(
+        { video: { facingMode: { ideal: 'environment' } }, audio: false },
+        video,
+        result => {
+          if (!result || generation !== scanGeneration || submitting) return;
           const value = result.getText().trim();
-          if (value) {
-            input.value = value;
-            status.textContent = 'Barcode detected. Looking up meter…';
-            control.stop();
-            controls = null;
-            form.requestSubmit();
-          }
+          if (!value) return;
+          input.value = value;
+          stopScanner('Code 128 barcode detected. Looking up the meter…');
+          form.requestSubmit();
         }
-      });
-      stop.disabled = false;
-      status.textContent = 'Camera is active. Align the barcode inside the preview.';
-    } catch (e) {
-      stopScanner();
-      status.textContent = 'Could not start camera. Check browser permission and HTTPS, then try again.';
+      );
+      if (generation !== scanGeneration) {
+        cameraControls.stop();
+        return;
+      }
+      controls = cameraControls;
+      status.textContent = 'Camera is active. Align the full Code 128 barcode inside the preview.';
+      scanHintTimer = window.setTimeout(() => {
+        if (generation === scanGeneration && !submitting) {
+          status.textContent = 'No Code 128 barcode detected yet. Check focus and lighting, then hold the full barcode steady in view.';
+        }
+      }, 12000);
+    } catch (error) {
+      if (generation !== scanGeneration) return;
+      stopScanner(cameraErrorMessage(error));
     }
   });
-  window.addEventListener('pagehide', stopScanner);
+  window.addEventListener('pagehide', () => stopScanner('Camera stopped.'));
+  if (document.querySelector('[role="alert"]')) {
+    input.focus();
+    input.select();
+  }
 })();
 </script>
 {% endblock %}

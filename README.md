@@ -59,4 +59,4 @@ Open `/scan/` from the navigation menu.
 3. Keep the database and media folder on persistent storage and back them up. Restrict the application to authorized users before production deployment.
 4. The phone and office host must be able to communicate over the company network. Do not expose the app to the public internet unless approved and secured.
 
-The browser camera library is loaded from the `@zxing/browser` CDN; an internet connection may be needed for that script unless your IT team hosts a reviewed copy internally.
+The browser camera scanner loads `@zxing/browser` 0.2.1 from the CDN and uses its one-dimensional reader to scan traditional barcodes, including Code 128 (not QR codes). An internet connection may be needed for the library unless your IT team hosts a reviewed copy internally. Camera access on mobile devices requires HTTPS when accessing the site remotely; ordinary HTTP LAN IP addresses are not secure contexts in most mobile browsers.

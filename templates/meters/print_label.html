@@ -1,2 +1,62 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Print label {{ meter.serial_number }}</title><style>
-@page{size:100mm 65mm;margin:4mm}*{box-sizing:border-box}body{font:10px Arial,sans-serif;color:#111;margin:0}.label{width:92mm;min-height:56mm;border:1px solid #aaa;padding:3mm}.top{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding-bottom:2mm}.company{font-size:13px;font-weight:700}.serial{font-size:11px;font-weight:700;margin-top:3mm}.barcode{text-align:center;margin:1mm 0}.barcode img{max-width:75mm;max-height:18mm}.id{text-align:center;font-family:monospace;font-size:10px;letter-spacing:1px}.specs{display:grid;grid-template-columns:1fr 1fr;gap:1mm 3mm;margin-top:2mm}.specs div{border-top:1px solid #eee;padding-top:1mm}.key{color:#555}.value{font-weight:bold}@media screen{body{padding:20px}.label{margin:auto}.print{display:block;margin:16px auto;padding:10px 20px}}@media print{.print{display:none}}</style></head><body><div class="label"><div class="top"><span class="company">METER IDENTIFICATION</span><span>{{ meter.size }}</span></div><div class="serial">S/N: {{ meter.serial_number }}</div><div class="barcode"><img src="{{ meter.barcode_image.url }}" alt="Barcode"></div><div class="id">{{ meter.barcode_id }}</div><div class="specs"><div><span class="key">Type: </span><span class="value">{{ meter.meter_type }}</span></div><div><span class="key">Model: </span><span class="value">{{ meter.model_number }}</span></div><div><span class="key">Digits: </span><span class="value">{{ meter.number_of_digits }}</span></div><div><span class="key">Pre-decimal: </span><span class="value">{{ meter.pre_decimal_digits }}</span></div><div><span class="key">Decimals: </span><span class="value">{{ meter.decimal_digits }}</span></div><div><span class="key">Multiplier: </span><span class="value">{{ meter.multiplication_factor }}</span></div><div><span class="key">Unit: </span><span class="value">{{ meter.unit_of_measurement }}</span></div><div><span class="key">Max reading: </span><span class="value">{{ meter.maximum_reading }}</span></div><div><span class="key">Manufacturer: </span><span class="value">{{ meter.manufacturer_name }}</span></div><div><span class="key">Made in: </span><span class="value">{{ meter.country_of_manufacture }}</span></div><div><span class="key">Manufactured: </span><span class="value">{{ meter.date_of_manufacture }}</span></div><div><span class="key">Contract: </span><span class="value">{{ meter.contract_reference }}</span></div></div></div><button class="print" onclick="window.print()">Print label</button></body></html>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Print label {{ meter.serial_number }}</title>
+        <style>
+@page{size:100mm 65mm;margin:4mm}*{box-sizing:border-box}body{font:10px Arial,sans-serif;color:#111;margin:0}.label{width:92mm;min-height:56mm;border:1px solid #aaa;padding:3mm}.top{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding-bottom:2mm}.company{font-size:13px;font-weight:700}.serial{font-size:11px;font-weight:700;margin-top:3mm}.barcode{text-align:center;margin:1mm 0}.barcode img{max-width:75mm;max-height:18mm}.id{text-align:center;font-family:monospace;font-size:10px;letter-spacing:1px}.specs{display:grid;grid-template-columns:1fr 1fr;gap:1mm 3mm;margin-top:2mm}.specs div{border-top:1px solid #eee;padding-top:1mm}.key{color:#555}.value{font-weight:bold}@media screen{body{padding:20px}.label{margin:auto}.print{display:block;margin:16px auto;padding:10px 20px}}@media print{.print{display:none}}
+</style>
+</head>
+<body>
+    <div class="label">
+        <div class="top">
+            <span class="company">METER IDENTIFICATION</span>
+            <span>{{ meter.size }}</span>
+        </div>
+        <div class="serial">S/N: {{ meter.serial_number }}</div>
+        <div class="barcode">
+            <img src="{{ meter.barcode_image.url }}" alt="Barcode">
+        </div>
+        <!-- <div class="id">{{ meter.barcode_id }}</div>
+        <div class="specs"><div>
+            <span class="key">Type: </span>
+            <span class="value">{{ meter.meter_type }}</span>
+        </div>
+        <div><span class="key">Model: </span>
+            <span class="value">{{ meter.model_number }}</span>
+        </div>
+        <div><span class="key">Digits: </span>
+            <span class="value">{{ meter.number_of_digits }}</span>
+        </div>
+        <div><span class="key">Pre-decimal: </span>
+            <span class="value">{{ meter.pre_decimal_digits }}</span>
+        </div>
+        <div><span class="key">Decimals: </span>
+            <span class="value">{{ meter.decimal_digits }}</span>
+        </div>
+        <div><span class="key">Multiplier: </span>
+            <span class="value">{{ meter.multiplication_factor }}</span>
+        </div>
+        <div><span class="key">Unit: </span>
+            <span class="value">{{ meter.unit_of_measurement }}</span>
+        </div>
+        <div><span class="key">Max reading: </span>
+            <span class="value">{{ meter.maximum_reading }}</span>
+        </div>
+        <div><span class="key">Manufacturer: </span>
+            <span class="value">{{ meter.manufacturer_name }}</span>
+        </div>
+        <div><span class="key">Made in: </span>
+            <span class="value">{{ meter.country_of_manufacture }}</span>
+        </div>
+        <div><span class="key">Manufactured: </span>
+            <span class="value">{{ meter.date_of_manufacture }}</span>
+        </div>
+        <div><span class="key">Contract: </span>
+            <span class="value">{{ meter.contract_reference }}</span>
+        </div> -->
+    </div>
+</div>
+<button class="print" onclick="window.print()">Print label</button>
+</body>
+</html>

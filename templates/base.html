@@ -9,7 +9,9 @@
 <body>
 <aside class="sidebar">
   <div class="brand"><span class="brand-mark">M</span><div><strong>MeterFlow</strong><small>Barcode management</small></div></div>
-  <nav><a href="{% url 'dashboard' %}">▦ &nbsp; Dashboard</a><a href="{% url 'create_meter' %}">＋ &nbsp; Add meter</a><a href="{% url 'scan_meter' %}">⌗ &nbsp; Scan barcode</a><a href="{% url 'import_csv' %}">⇧ &nbsp; Import records</a></nav>
+  <nav><a href="{% url 'dashboard' %}">▦ &nbsp; Dashboard</a><a href="{% url 'create_meter' %}">＋ &nbsp; Add meter</a>
+    <!-- <a href="{% url 'scan_meter' %}">⌗ &nbsp; Scan barcode</a> -->
+    <a href="{% url 'import_csv' %}">⇧ &nbsp; Import records</a></nav>
   <div class="side-note"><span class="status-dot"></span> Local database active</div>
 </aside>
 <main class="main">

@@ -49,6 +49,8 @@ def scan_meter(request):
                 return redirect("meter_detail", pk=meter.pk)
             except Meter.DoesNotExist:
                 error = f"No meter record was found for barcode: {scanned_value}"
+            except Meter.MultipleObjectsReturned:
+                error = "More than one meter matches this barcode. Contact an administrator."
     return render(request, "meters/scan.html", {"scanned_value": scanned_value, "scan_error": error})
 
 
